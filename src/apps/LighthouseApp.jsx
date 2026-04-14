@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useGame } from '../game/state.jsx'
+import { sounds } from '../game/sounds.js'
 
 const BOOT_LINES_EN = [
   '> PROJECT LIGHTHOUSE \u2014 ADMIN CONSOLE',
@@ -78,11 +79,15 @@ export default function LighthouseApp() {
 
   const allLines = [...bootLines, ...dashboardLines]
 
-  // CRT flicker on first open — 800ms
+  // CRT flicker on first open — 800ms; play lighthouse boot sound shortly after flicker starts
   useEffect(() => {
     if (phase !== 'flicker') return
+    const soundTimer = setTimeout(() => sounds.lighthouseBoot(), 400)
     const timer = setTimeout(() => setPhase('boot'), 800)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(soundTimer)
+      clearTimeout(timer)
+    }
   }, [phase])
 
   // Typewriter effect: reveal characters line by line

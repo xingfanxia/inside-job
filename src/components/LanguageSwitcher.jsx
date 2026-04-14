@@ -9,7 +9,7 @@ export default function LanguageSwitcher() {
   }
 
   return (
-    <button className="language-switcher" onClick={toggle}>
+    <button type="button" className="language-switcher" onClick={toggle}>
       {state.locale === 'en' ? 'EN / 中文' : '中文 / EN'}
     </button>
   )

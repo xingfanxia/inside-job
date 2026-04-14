@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useGame } from '../game/state.jsx'
+import { sounds } from '../game/sounds.js'
 
 export default function IncidentReport() {
   const { state, dispatch, localeData } = useGame()
@@ -22,7 +23,7 @@ export default function IncidentReport() {
 
   return (
     <div className={`report-panel ${collapsed ? 'report-collapsed' : ''}`}>
-      <button className="report-toggle" onClick={toggle}>
+      <button type="button" className="report-toggle" onClick={toggle}>
         {collapsed
           ? (isZh ? '[ 展开报告 ]' : '[ Expand Report ]')
           : (isZh ? '[ 收起 ]' : '[ Collapse ]')
@@ -115,8 +116,13 @@ function ReportSection({ section, gameState, dispatch }) {
           {section.choices.map((choice) => (
             <button
               key={choice.id}
+              type="button"
               className={`report-choice ${gameState.selectedEnding === choice.id ? 'report-choice-selected' : ''}`}
-              onClick={() => dispatch({ type: 'SELECT_ENDING', payload: choice.id })}
+              onClick={() => {
+                sounds.endingSelect()
+                dispatch({ type: 'SELECT_ENDING', payload: choice.id })
+                dispatch({ type: 'SET_PHASE', payload: 'ending' })
+              }}
             >
               <span className="report-choice-label">{choice.label}</span>
               <span className="report-choice-title">{choice.title}</span>

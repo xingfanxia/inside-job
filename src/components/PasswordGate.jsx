@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useGame } from '../game/state.jsx'
 import { validatePassword, getPasswordHints } from '../game/passwords.js'
+import { sounds } from '../game/sounds.js'
 import { LockIcon } from '../styles/icons.jsx'
 
 export default function PasswordGate({ appId, appLabel }) {
@@ -17,6 +18,7 @@ export default function PasswordGate({ appId, appLabel }) {
     if (validatePassword(appId, input, config)) {
       dispatch({ type: 'UNLOCK_APP', payload: { appId } })
     } else {
+      sounds.passwordFail()
       setAttempts((a) => a + 1)
       setShake(true)
       setInput('')

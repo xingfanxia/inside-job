@@ -1,5 +1,6 @@
 import { useCallback, useRef, useEffect } from 'react'
 import { useGame } from '../game/state.jsx'
+import { sounds } from '../game/sounds.js'
 import { getIcon } from '../styles/icons.jsx'
 import PasswordGate from './PasswordGate.jsx'
 
@@ -49,6 +50,15 @@ export default function Window({ windowData, children }) {
     dispatch({ type: 'ACTIVATE_WINDOW', payload: { windowId: windowData.id } })
   }, [dispatch, windowData.id])
 
+  // Play open/close sounds as the component mounts / unmounts
+  useEffect(() => {
+    sounds.windowOpen()
+    return () => {
+      sounds.windowClose()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const handleClose = useCallback((e) => {
     e.stopPropagation()
     dispatch({ type: 'CLOSE_WINDOW', payload: { windowId: windowData.id } })
@@ -92,17 +102,17 @@ export default function Window({ windowData, children }) {
           <span className="titlebar-title">{app?.label || windowData.appId}</span>
         </div>
         <div className="titlebar-buttons">
-          <button className="titlebar-btn titlebar-btn-minimize" onClick={handleMinimize}>
+          <button type="button" className="titlebar-btn titlebar-btn-minimize" onClick={handleMinimize}>
             <svg width="10" height="10" viewBox="0 0 10 10">
               <rect x="1" y="5" width="8" height="1" fill="currentColor" />
             </svg>
           </button>
-          <button className="titlebar-btn titlebar-btn-maximize" onClick={handleMaximize}>
+          <button type="button" className="titlebar-btn titlebar-btn-maximize" onClick={handleMaximize}>
             <svg width="10" height="10" viewBox="0 0 10 10">
               <rect x="1" y="1" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="1" />
             </svg>
           </button>
-          <button className="titlebar-btn titlebar-btn-close" onClick={handleClose}>
+          <button type="button" className="titlebar-btn titlebar-btn-close" onClick={handleClose}>
             <svg width="10" height="10" viewBox="0 0 10 10">
               <line x1="1" y1="1" x2="9" y2="9" stroke="currentColor" strokeWidth="1.5" />
               <line x1="9" y1="1" x2="1" y2="9" stroke="currentColor" strokeWidth="1.5" />

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useGame } from './state.jsx'
 
 // 18 primary clues — universal IDs, locale-independent
@@ -36,13 +36,21 @@ export const MIRROR_CLUES = {
 export const TOTAL_CLUES = Object.keys(CLUES).length
 export const TOTAL_MIRROR_CLUES = Object.keys(MIRROR_CLUES).length
 
+// How long the discovery-flash class stays applied after a clue is found.
+const FLASH_DURATION_MS = 2000
+
 /**
- * Hook: returns { found, record } for a given clue ID
+ * Hook: returns { found, record, discover, justFound } for a given clue ID.
+ * `justFound` is true for 2 seconds after the clue is first discovered so
+ * components can apply a brief visual flash.
  */
 export function useClue(clueId) {
   const { state, dispatch } = useGame()
-  const found = state.cluesFound.includes(clueId)
+  const found = state.cluesFound.includes(clueId) || state.mirrorClues.includes(clueId)
   const record = CLUES[clueId] || MIRROR_CLUES[clueId] || null
+
+  const [justFound, setJustFound] = useState(false)
+  const firedRef = useRef(false)
 
   const discover = useCallback(() => {
     if (!found && record) {
@@ -54,7 +62,18 @@ export function useClue(clueId) {
     }
   }, [found, record, clueId, dispatch])
 
-  return { found, record, discover }
+  // Trigger the flash once, the first time we observe this clue become found.
+  useEffect(() => {
+    if (found && !firedRef.current) {
+      firedRef.current = true
+      setJustFound(true)
+      const t = setTimeout(() => setJustFound(false), FLASH_DURATION_MS)
+      return () => clearTimeout(t)
+    }
+    return undefined
+  }, [found])
+
+  return { found, record, discover, justFound }
 }
 
 /**
@@ -67,7 +86,7 @@ export function useScrollClue(clueId) {
   const alreadyFound = state.cluesFound.includes(clueId) || state.mirrorClues.includes(clueId)
 
   useEffect(() => {
-    if (alreadyFound || !ref.current) return
+    if (alreadyFound || !ref.current) return undefined
 
     const observer = new IntersectionObserver(
       (entries) => {

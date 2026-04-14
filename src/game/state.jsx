@@ -1,6 +1,69 @@
-import { createContext, useContext, useReducer, useMemo, useCallback } from 'react'
+import { createContext, useContext, useReducer, useMemo, useCallback, useEffect, useRef } from 'react'
 import { getLocaleData } from '../config/locales.js'
 import { TOTAL_CLUES } from './clues.js'
+import { sounds } from './sounds.js'
+
+// --- Persistence ---
+export const SAVE_KEY = 'inside-job-save'
+
+// Fields to persist to localStorage. UI-only fields (openWindows,
+// activeWindow, nextZIndex, lastFoundClueId, lastFoundClueAt) are excluded.
+const PERSISTED_FIELDS = [
+  'locale',
+  'cluesFound',
+  'mirrorClues',
+  'appsOpened',
+  'unlockedApps',
+  'reportPhase',
+  'gamePhase',
+  'gameTimeMinutes',
+  'selectedEnding',
+  'screen',
+]
+
+function serializeState(state) {
+  const out = {}
+  for (const key of PERSISTED_FIELDS) out[key] = state[key]
+  out.savedAt = Date.now()
+  return out
+}
+
+export function loadSave() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(SAVE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return null
+    if (!Array.isArray(parsed.cluesFound)) return null
+    return parsed
+  } catch (err) {
+    console.warn('Failed to load save:', err)
+    return null
+  }
+}
+
+function writeSave(state) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState(state)))
+  } catch (err) {
+    console.warn('Failed to persist save:', err)
+  }
+}
+
+export function clearSave() {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(SAVE_KEY)
+  } catch (err) {
+    console.warn('Failed to clear save:', err)
+  }
+}
+
+export function hasSave() {
+  return loadSave() !== null
+}
 
 // --- Report phase thresholds ---
 function calcReportPhase(clueCount) {
@@ -35,6 +98,10 @@ function createInitialState(locale = 'en') {
     nextZIndex: 100,
     gameTimeMinutes: 555, // 9:15 AM
     selectedEnding: null,
+    savedAt: null,
+    // UI state — tracked so components can flash the most recently found clue
+    lastFoundClueId: null,
+    lastFoundClueAt: 0,
   }
 }
 
@@ -216,6 +283,8 @@ function gameReducer(state, action) {
         unlockedApps: shouldUnlockLighthouse && !state.unlockedApps.includes('lighthouse')
           ? [...state.unlockedApps, 'lighthouse']
           : state.unlockedApps,
+        lastFoundClueId: clueId,
+        lastFoundClueAt: Date.now(),
       }
     }
 
@@ -225,6 +294,8 @@ function gameReducer(state, action) {
       return {
         ...state,
         mirrorClues: [...state.mirrorClues, clueId],
+        lastFoundClueId: clueId,
+        lastFoundClueAt: Date.now(),
       }
     }
 
@@ -270,6 +341,28 @@ function gameReducer(state, action) {
       }
     }
 
+    case 'LOAD_SAVE': {
+      const saved = action.payload || {}
+      // Start from a clean baseline so UI-only fields are reset correctly,
+      // then overlay the saved snapshot.
+      const baseline = createInitialState(saved.locale || state.locale)
+      const merged = { ...baseline }
+      for (const key of PERSISTED_FIELDS) {
+        if (saved[key] !== undefined) merged[key] = saved[key]
+      }
+      merged.savedAt = typeof saved.savedAt === 'number' ? saved.savedAt : null
+      return merged
+    }
+
+    case 'RESET_GAME': {
+      clearSave()
+      return createInitialState(state.locale)
+    }
+
+    case 'MANUAL_SAVE': {
+      return { ...state, savedAt: Date.now() }
+    }
+
     default:
       return state
   }
@@ -282,6 +375,71 @@ export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, 'en', createInitialState)
 
   const localeData = useMemo(() => getLocaleData(state.locale), [state.locale])
+
+  // --- Sound side effects: watch state changes and play corresponding sounds ---
+  const prevCluesRef = useRef(0)
+  const prevMirrorRef = useRef(0)
+  const prevPhaseRef = useRef(state.reportPhase)
+  const prevUnlockedRef = useRef(state.unlockedApps)
+
+  // Only fire sounds on single-step increases — prevents a burst of sounds
+  // when LOAD_SAVE rehydrates a save with many clues at once.
+  useEffect(() => {
+    const prev = prevCluesRef.current
+    const curr = state.cluesFound.length
+    if (curr === prev + 1) sounds.clueFound()
+    prevCluesRef.current = curr
+  }, [state.cluesFound.length])
+
+  useEffect(() => {
+    const prev = prevMirrorRef.current
+    const curr = state.mirrorClues.length
+    if (curr === prev + 1) sounds.mirrorClueFound()
+    prevMirrorRef.current = curr
+  }, [state.mirrorClues.length])
+
+  useEffect(() => {
+    const prev = prevPhaseRef.current
+    const curr = state.reportPhase
+    if (curr === prev + 1) sounds.reportPhaseUnlock()
+    prevPhaseRef.current = curr
+  }, [state.reportPhase])
+
+  useEffect(() => {
+    const prev = prevUnlockedRef.current
+    const curr = state.unlockedApps
+    // Play only on a single-app unlock (skip bulk save load / locale reset)
+    const added = curr.filter((id) => !prev.includes(id))
+    if (added.length === 1 && curr.length === prev.length + 1) {
+      sounds.passwordUnlock()
+    }
+    prevUnlockedRef.current = curr
+  }, [state.unlockedApps])
+
+  // --- Persistence: write to localStorage whenever any persisted field changes.
+  // Skip while the player is still on the opening screen with zero progress,
+  // so merely launching the game doesn't create a spurious save.
+  useEffect(() => {
+    const hasProgress =
+      state.screen !== 'opening' ||
+      state.cluesFound.length > 0 ||
+      state.mirrorClues.length > 0 ||
+      state.appsOpened.length > 0
+    if (hasProgress) {
+      writeSave(state)
+    }
+  }, [
+    state.screen,
+    state.locale,
+    state.cluesFound,
+    state.mirrorClues,
+    state.appsOpened,
+    state.unlockedApps,
+    state.reportPhase,
+    state.gamePhase,
+    state.gameTimeMinutes,
+    state.selectedEnding,
+  ])
 
   const value = useMemo(
     () => ({ state, dispatch, localeData }),

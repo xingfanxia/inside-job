@@ -4,6 +4,7 @@ import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
 import Taskbar from './Taskbar.jsx'
 import IncidentReport from './IncidentReport.jsx'
+import MobileWarning from './MobileWarning.jsx'
 import EmailApp from '../apps/EmailApp.jsx'
 import SlackApp from '../apps/SlackApp.jsx'
 import DocVaultApp from '../apps/DocVaultApp.jsx'
@@ -55,6 +56,14 @@ export default function Desktop() {
     return () => clearInterval(interval)
   }, [dispatch])
 
+  // Mirror the current locale onto <html> so locale-specific CSS
+  // (e.g. the desktop watermark) can switch without a JS round trip.
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    document.documentElement.setAttribute('lang', state.locale)
+    document.body.setAttribute('data-locale', state.locale)
+  }, [state.locale])
+
   return (
     <div className="desktop">
       <div className="desktop-main">
@@ -75,6 +84,7 @@ export default function Desktop() {
 
       <IncidentReport />
       <Taskbar />
+      <MobileWarning />
     </div>
   )
 }

@@ -74,7 +74,7 @@ export default function Opening() {
           </p>
         )}
       </div>
-      <button className="opening-skip" onClick={handleSkip}>
+      <button type="button" className="opening-skip" onClick={handleSkip}>
         {state.locale === 'zh' ? '[ 跳过 ]' : '[ Skip ]'}
       </button>
     </div>
