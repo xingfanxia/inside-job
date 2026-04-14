@@ -5,6 +5,8 @@ import Window from './Window.jsx'
 import Taskbar from './Taskbar.jsx'
 import IncidentReport from './IncidentReport.jsx'
 import MobileWarning from './MobileWarning.jsx'
+import Onboarding from './Onboarding.jsx'
+import ClueToast from './ClueToast.jsx'
 import EmailApp from '../apps/EmailApp.jsx'
 import SlackApp from '../apps/SlackApp.jsx'
 import DocVaultApp from '../apps/DocVaultApp.jsx'
@@ -85,6 +87,8 @@ export default function Desktop() {
       <IncidentReport />
       <Taskbar />
       <MobileWarning />
+      <Onboarding />
+      <ClueToast />
     </div>
   )
 }

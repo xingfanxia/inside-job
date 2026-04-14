@@ -44,15 +44,22 @@ export default function DesktopIcon({ appConfig }) {
 
   const IconComponent = getIcon(appConfig.icon)
 
+  // Show "start here" pulse on email icon if player hasn't opened anything yet
+  const isStartHint =
+    appConfig.id === 'email' &&
+    state.appsOpened.length === 0 &&
+    state.cluesFound.length === 0
+
   const className = [
     'desktop-icon',
     lighthouseUnlocking ? 'desktop-icon-lighthouse-pulse' : '',
+    isStartHint ? 'desktop-icon-start-here' : '',
   ].filter(Boolean).join(' ')
 
   return (
     <div
       className={className}
-      onDoubleClick={handleOpen}
+      onClick={handleOpen}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}

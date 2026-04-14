@@ -3687,3 +3687,206 @@ textarea:focus-visible,
     color: var(--accent-bright);
   }
 }
+
+/* ============================================
+   ONBOARDING OVERLAY
+   ============================================ */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 18, 34, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: onboardingFadeIn 0.3s ease-out;
+}
+@keyframes onboardingFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.onboarding-card {
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 36px 32px;
+  max-width: 460px;
+  width: calc(100% - 40px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(59,130,246,0.2);
+  animation: onboardingSlideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes onboardingSlideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.onboarding-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+.onboarding-dot {
+  width: 28px;
+  height: 3px;
+  background: rgba(148,163,184,0.3);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.onboarding-dot-done {
+  background: var(--accent);
+}
+.onboarding-dot-active {
+  background: var(--accent-bright);
+  box-shadow: 0 0 8px var(--accent-bright);
+}
+.onboarding-title {
+  font-family: var(--font-ui);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 14px;
+  letter-spacing: -0.2px;
+}
+.onboarding-body {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  margin-bottom: 28px;
+}
+.onboarding-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.onboarding-skip {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 8px 4px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: color 0.15s;
+}
+.onboarding-skip:hover {
+  color: var(--text);
+}
+.onboarding-next {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.onboarding-next:hover {
+  background: var(--accent-bright);
+}
+.onboarding-next:active {
+  transform: scale(0.98);
+}
+
+/* ============================================
+   CLUE TOAST NOTIFICATIONS
+   ============================================ */
+.clue-toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 8500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.clue-toast {
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-left-width: 3px;
+  border-radius: 4px;
+  padding: 12px 16px;
+  min-width: 240px;
+  max-width: 320px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: toastSlideIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), toastFadeOut 0.4s ease-in 3s forwards;
+  pointer-events: auto;
+}
+.clue-toast-clue {
+  border-color: var(--success);
+}
+.clue-toast-mirror {
+  border-color: var(--warning);
+  background: rgba(245,158,11,0.08);
+}
+.clue-toast-phase {
+  border-color: var(--accent-bright);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 20px rgba(96,165,250,0.2);
+}
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toastFadeOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+.clue-toast-title {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+  letter-spacing: 0.2px;
+}
+.clue-toast-detail {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.clue-toast-clue .clue-toast-detail {
+  color: var(--success);
+}
+.clue-toast-mirror .clue-toast-title {
+  color: var(--warning);
+}
+
+/* ============================================
+   START HERE PULSE (on Email icon for first-timers)
+   ============================================ */
+.desktop-icon-start-here {
+  position: relative;
+}
+.desktop-icon-start-here::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  pointer-events: none;
+  animation: startHerePulse 2s ease-in-out infinite;
+}
+@keyframes startHerePulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59,130,246,0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+    box-shadow: 0 0 20px 2px rgba(59,130,246,0.5);
+  }
+}
+
+/* Language switcher inside taskbar needs tighter styling */
+.taskbar-right .lang-switcher,
+.taskbar-right .language-switcher {
+  margin-right: 8px;
+  font-size: 11px;
+}

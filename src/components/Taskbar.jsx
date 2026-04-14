@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect, useRef } from 'react'
 import { useGame } from '../game/state.jsx'
 import { TOTAL_CLUES } from '../game/clues.js'
 import { getIcon } from '../styles/icons.jsx'
+import LanguageSwitcher from './LanguageSwitcher.jsx'
 
 export default function Taskbar() {
   const { state, dispatch, localeData } = useGame()
@@ -137,6 +138,7 @@ export default function Taskbar() {
       </div>
 
       <div className="taskbar-right">
+        <LanguageSwitcher />
         <span
           className="taskbar-phase-dot"
           style={{ background: phaseColors[state.reportPhase] || 'var(--text-dim)' }}
