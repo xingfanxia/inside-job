@@ -257,20 +257,35 @@ body {
    LANGUAGE SWITCHER
    ============================================================ */
 .language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: var(--panel);
-  border: 1px solid var(--panel-border);
-  color: var(--text-dim);
+  border: 1px solid var(--accent);
+  color: var(--accent-bright);
   font-family: var(--font-mono);
   font-size: 12px;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
   cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  min-width: 60px;
+  justify-content: center;
 }
 
 .language-switcher:hover {
-  color: var(--accent-bright);
-  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent-bright);
+}
+
+.language-switcher svg {
+  flex-shrink: 0;
+}
+
+.language-switcher-label {
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 /* ============================================================
