@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useGame } from '../game/state.jsx'
+import { TOTAL_CLUES } from '../game/clues.js'
 import { sounds } from '../game/sounds.js'
 
 export default function IncidentReport() {
@@ -113,22 +114,36 @@ function ReportSection({ section, gameState, dispatch }) {
       {/* Ending choices (phase 5) */}
       {section.choices && (
         <div className="report-choices">
-          {section.choices.map((choice) => (
-            <button
-              key={choice.id}
-              type="button"
-              className={`report-choice ${gameState.selectedEnding === choice.id ? 'report-choice-selected' : ''}`}
-              onClick={() => {
-                sounds.endingSelect()
-                dispatch({ type: 'SELECT_ENDING', payload: choice.id })
-                dispatch({ type: 'SET_PHASE', payload: 'ending' })
-              }}
-            >
-              <span className="report-choice-label">{choice.label}</span>
-              <span className="report-choice-title">{choice.title}</span>
-              <p className="report-choice-desc">{choice.description}</p>
-            </button>
-          ))}
+          {section.choices.map((choice) => {
+            // Hidden-ending gating — only selectable with the complete clue set.
+            const needsAllClues = choice.requiresAllClues === true
+            const disabled = needsAllClues && gameState.cluesFound.length < TOTAL_CLUES
+            return (
+              <button
+                key={choice.id}
+                type="button"
+                disabled={disabled}
+                className={`report-choice ${gameState.selectedEnding === choice.id ? 'report-choice-selected' : ''} ${disabled ? 'report-choice-locked' : ''}`}
+                onClick={() => {
+                  if (disabled) return
+                  sounds.endingSelect()
+                  dispatch({ type: 'SELECT_ENDING', payload: choice.id })
+                  dispatch({ type: 'SET_PHASE', payload: 'ending' })
+                }}
+              >
+                <span className="report-choice-label">{choice.label}</span>
+                <span className="report-choice-title">{choice.title}</span>
+                <p className="report-choice-desc">{choice.description}</p>
+                {disabled && (
+                  <p className="report-choice-lock">
+                    {gameState.locale === 'zh'
+                      ? `需要 ${TOTAL_CLUES}/${TOTAL_CLUES} 线索（当前 ${gameState.cluesFound.length}/${TOTAL_CLUES}）`
+                      : `Requires ${TOTAL_CLUES}/${TOTAL_CLUES} clues (currently ${gameState.cluesFound.length}/${TOTAL_CLUES})`}
+                  </p>
+                )}
+              </button>
+            )
+          })}
         </div>
       )}
     </div>

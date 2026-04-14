@@ -13,7 +13,10 @@ export default function Window({ windowData, children }) {
   const needsPassword = app?.password && !state.unlockedApps.includes(windowData.appId)
   const IconComponent = app ? getIcon(app.icon) : null
 
-  // Handle drag start on title bar
+  // Handle drag start on title bar. Clamps the resulting position so the
+  // titlebar is always reachable — at least a 100px grab area must stay
+  // on screen horizontally, and the full titlebar (~36px) stays visible
+  // vertically (never drag the titlebar off the top, never below the taskbar).
   const handleDragStart = useCallback((e) => {
     if (windowData.isMaximized) return
     e.preventDefault()
@@ -22,16 +25,34 @@ export default function Window({ windowData, children }) {
     const startY = e.clientY
     const startWinX = windowData.x
     const startWinY = windowData.y
+    const winW = windowData.width
+    const winH = windowData.height
 
     const handleMouseMove = (moveEvent) => {
       const dx = moveEvent.clientX - startX
       const dy = moveEvent.clientY - startY
+      const rawX = startWinX + dx
+      const rawY = startWinY + dy
+
+      const viewportW = window.innerWidth
+      const viewportH = window.innerHeight
+      const TASKBAR_H = 44
+      const TITLEBAR_H = 36
+      const MIN_GRAB = 100
+
+      // Keep at least MIN_GRAB of the window horizontally inside viewport
+      const minX = MIN_GRAB - winW
+      const maxX = viewportW - MIN_GRAB
+      // Keep titlebar reachable vertically
+      const minY = 0
+      const maxY = viewportH - TASKBAR_H - TITLEBAR_H
+
       dispatch({
         type: 'MOVE_WINDOW',
         payload: {
           windowId: windowData.id,
-          x: startWinX + dx,
-          y: startWinY + dy,
+          x: Math.max(minX, Math.min(maxX, rawX)),
+          y: Math.max(minY, Math.min(maxY, rawY)),
         },
       })
     }
@@ -43,7 +64,15 @@ export default function Window({ windowData, children }) {
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
-  }, [windowData.id, windowData.x, windowData.y, windowData.isMaximized, dispatch])
+  }, [
+    windowData.id,
+    windowData.x,
+    windowData.y,
+    windowData.width,
+    windowData.height,
+    windowData.isMaximized,
+    dispatch,
+  ])
 
   // Bring to front on click anywhere in window
   const handleActivate = useCallback(() => {

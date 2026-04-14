@@ -16,6 +16,17 @@ function EmailClueRecorder({ clueId, clueType }) {
   return null
 }
 
+// Mirror clues (failures) fire as soon as the email is viewed — no clueType gate.
+function EmailMirrorRecorder({ mirrorId }) {
+  const { discover } = useClue(mirrorId)
+
+  useEffect(() => {
+    discover()
+  }, [discover])
+
+  return null
+}
+
 function EmailListItem({ email, isSelected, onSelect, tab }) {
   const from = tab === 'sent'
     ? email.to
@@ -90,6 +101,9 @@ function EmailDetail({ email, tab }) {
 
       {email.clueId && (
         <EmailClueRecorder clueId={email.clueId} clueType={email.clueType} />
+      )}
+      {email.mirrorId && (
+        <EmailMirrorRecorder mirrorId={email.mirrorId} />
       )}
     </div>
   )

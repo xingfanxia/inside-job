@@ -28,6 +28,7 @@ export default function EndingScreen() {
   const endings = localeData.endings
   const isZh = state.locale === 'zh'
 
+  // ALL hooks must run unconditionally — do NOT early-return between hooks.
   const ending = useMemo(
     () => endings.find((e) => e.id === state.selectedEnding),
     [endings, state.selectedEnding]
@@ -44,30 +45,31 @@ export default function EndingScreen() {
   // Prevent double-fire of per-char sound if effect re-runs
   const lastTickAtRef = useRef(0)
 
-  // Safety: if no ending found, bail.
-  if (!ending) return null
-
-  const lines = ending.lines || []
-  const closingLine = ending.closingLine || ''
+  // Read ending data defensively — these are safe even when ending is undefined.
+  const lines = ending?.lines || []
+  const closingLine = ending?.closingLine || ''
 
   // Phase transitions ---------------------------------------------------------
 
   // fadeIn -> titleHold
   useEffect(() => {
+    if (!ending) return
     if (phase !== 'fadeIn') return
     const t = setTimeout(() => setPhase('titleHold'), FADE_IN_MS)
     return () => clearTimeout(t)
-  }, [phase])
+  }, [ending, phase])
 
   // titleHold -> typing
   useEffect(() => {
+    if (!ending) return
     if (phase !== 'titleHold') return
     const t = setTimeout(() => setPhase('typing'), TITLE_HOLD_MS)
     return () => clearTimeout(t)
-  }, [phase])
+  }, [ending, phase])
 
   // Typing driver: one char at a time, with inter-line pauses
   useEffect(() => {
+    if (!ending) return
     if (phase !== 'typing') return
 
     // All lines typed?
@@ -113,41 +115,49 @@ export default function EndingScreen() {
       }
     }, CHAR_DELAY_MS)
     return () => clearTimeout(t)
-  }, [phase, currentLineIdx, currentCharIdx, lines])
+  }, [ending, phase, currentLineIdx, currentCharIdx, lines])
 
   // preClosing -> closing (show closing line)
   useEffect(() => {
+    if (!ending) return
     if (phase !== 'preClosing') return
     const t = setTimeout(() => {
       setClosingVisible(true)
       setPhase('closing')
     }, PRE_CLOSING_PAUSE_MS)
     return () => clearTimeout(t)
-  }, [phase])
+  }, [ending, phase])
 
   // closing -> done (show stats + buttons)
   useEffect(() => {
+    if (!ending) return
     if (phase !== 'closing') return
     const t = setTimeout(() => setPhase('done'), 2200)
     return () => clearTimeout(t)
-  }, [phase])
+  }, [ending, phase])
 
   // Actions -------------------------------------------------------------------
   const handleRestart = useCallback(() => {
-    // Full reload is the cleanest reset
-    if (typeof window !== 'undefined') window.location.reload()
-  }, [])
-
-  const handleViewCredits = useCallback(() => {
-    // Credits = stay on ending screen but toggle an alternate view.
-    // Minimal: we dispatch SET_PHASE to 'credits' so downstream could route.
-    dispatch({ type: 'SET_PHASE', payload: 'credits' })
+    // Clear save and return to opening — no reload, so the player doesn't
+    // get prompted by the Resume chooser with a stale save.
+    dispatch({ type: 'RESET_GAME' })
+    dispatch({ type: 'SET_SCREEN', payload: 'opening' })
   }, [dispatch])
 
   // Render --------------------------------------------------------------------
+  // Conditional render at the very end — AFTER all hooks have run.
+  if (!ending) {
+    return (
+      <div className="ending-screen">
+        <div className="ending-error">
+          {isZh ? '结局数据未找到' : 'Ending data missing'}
+        </div>
+      </div>
+    )
+  }
+
   const mirrorCount = state.mirrorClues.length
   const clueCount = state.cluesFound.length
-
   const mirrorDescription = mirrorDescriptionText(mirrorCount, isZh)
 
   return (
@@ -210,9 +220,6 @@ export default function EndingScreen() {
             <div className="ending-actions">
               <button className="ending-button" onClick={handleRestart}>
                 {isZh ? '重新开始' : 'Restart'}
-              </button>
-              <button className="ending-button ending-button-ghost" onClick={handleViewCredits}>
-                {isZh ? '查看制作名单' : 'View Credits'}
               </button>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useMemo, useCallback, useEffect, useRef } from 'react'
 import { getLocaleData } from '../config/locales.js'
-import { TOTAL_CLUES } from './clues.js'
+import { LIGHTHOUSE_UNLOCK_CLUES, ENDING_AVAILABLE_CLUES } from './clues.js'
 import { sounds } from './sounds.js'
 
 // --- Persistence ---
@@ -66,11 +66,14 @@ export function hasSave() {
 }
 
 // --- Report phase thresholds ---
+// Recalibrated for ~36 total clues. Phase 5 gates the ending choices and
+// matches ENDING_AVAILABLE_CLUES so thresholds stay consistent between the
+// state machine and the report data.
 function calcReportPhase(clueCount) {
-  if (clueCount >= 18) return 5
-  if (clueCount >= 15) return 4
-  if (clueCount >= 11) return 3
-  if (clueCount >= 6) return 2
+  if (clueCount >= ENDING_AVAILABLE_CLUES) return 5 // 30
+  if (clueCount >= 22) return 4
+  if (clueCount >= 14) return 3
+  if (clueCount >= 7) return 2
   return 1
 }
 
@@ -274,7 +277,7 @@ function gameReducer(state, action) {
 
       const newClues = [...state.cluesFound, clueId]
       const newPhase = calcReportPhase(newClues.length)
-      const shouldUnlockLighthouse = newClues.length >= 15
+      const shouldUnlockLighthouse = newClues.length >= LIGHTHOUSE_UNLOCK_CLUES
 
       return {
         ...state,
@@ -315,10 +318,14 @@ function gameReducer(state, action) {
     case 'SET_LOCALE': {
       const newLocale = action.payload
       const data = getLocaleData(newLocale)
+      const defaults = getDefaultUnlocked(data.config)
+      // Preserve progress — merge the new locale's defaults with whatever
+      // the player has already unlocked. Switching languages should not wipe
+      // their password-gated apps or lighthouse unlock.
       return {
         ...state,
         locale: newLocale,
-        unlockedApps: getDefaultUnlocked(data.config),
+        unlockedApps: [...new Set([...state.unlockedApps, ...defaults])],
       }
     }
 

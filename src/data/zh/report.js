@@ -23,7 +23,7 @@ export default {
     },
     {
       id: 'phase-2',
-      minClues: 6,
+      minClues: 7,
       sections: [
         {
           heading: '第一节：关注人员名单',
@@ -43,7 +43,7 @@ export default {
     },
     {
       id: 'phase-3',
-      minClues: 11,
+      minClues: 14,
       sections: [
         {
           heading: '第二节：根因分析',
@@ -83,7 +83,7 @@ export default {
     },
     {
       id: 'phase-4',
-      minClues: 15,
+      minClues: 22,
       sections: [
         {
           heading: '第三节：调查结论',
@@ -113,7 +113,7 @@ export default {
     },
     {
       id: 'phase-5',
-      minClues: 18,
+      minClues: 30,
       sections: [
         {
           heading: '第四节：处置建议',
@@ -139,6 +139,13 @@ export default {
               label: 'C',
               title: '保护吹哨人',
               description: '建议对灯塔计划展开调查。保护泄露源头。向董事会及外部监管机构披露监控合同。',
+            },
+            {
+              id: 'ending-d',
+              label: 'D',
+              title: '全貌',
+              description: '如果你找齐了一切，也许还有一个答案。仅在发现全部36条线索后可选。',
+              requiresAllClues: true,
             },
           ],
         },

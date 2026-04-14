@@ -23,7 +23,7 @@ export default {
     },
     {
       id: 'phase-2',
-      minClues: 6,
+      minClues: 7,
       sections: [
         {
           heading: 'SECTION 1: IDENTIFIED PERSONS OF INTEREST',
@@ -43,7 +43,7 @@ export default {
     },
     {
       id: 'phase-3',
-      minClues: 11,
+      minClues: 14,
       sections: [
         {
           heading: 'SECTION 2: ROOT CAUSE ANALYSIS',
@@ -83,7 +83,7 @@ export default {
     },
     {
       id: 'phase-4',
-      minClues: 15,
+      minClues: 22,
       sections: [
         {
           heading: 'SECTION 3: FINDINGS',
@@ -113,7 +113,7 @@ export default {
     },
     {
       id: 'phase-5',
-      minClues: 18,
+      minClues: 30,
       sections: [
         {
           heading: 'SECTION 4: RECOMMENDATION',
@@ -139,6 +139,13 @@ export default {
               label: 'C',
               title: 'Whistleblower Protection',
               description: 'Recommend investigation of Project Lighthouse. Protect the source. Disclose the surveillance contract to the board and external oversight bodies.',
+            },
+            {
+              id: 'ending-d',
+              label: 'D',
+              title: 'The Full Picture',
+              description: 'If you have found everything, there may be one more answer. Available only with all 36 clues discovered.',
+              requiresAllClues: true,
             },
           ],
         },
