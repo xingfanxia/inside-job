@@ -36,8 +36,8 @@ function computeHint(state, isZh) {
       return {
         title: t("Open the CEO's email", '打开 CEO 的邮件'),
         body: t(
-          "There's an email from Sarah Park with the leaked document — click it.",
-          '孙雪梅给你发了一封带附件的邮件 — 点开看看。',
+          "The first email in your inbox is the forwarded leak. Read it.",
+          '收件箱第一封就是 CEO 转给你的泄露文件。打开读一下。',
         ),
       }
     }
@@ -45,37 +45,55 @@ function computeHint(state, isZh) {
       return {
         title: t("Check Slack", '看看飞书'),
         body: t(
-          "Scroll through #general and #deals — people mention things that shouldn't be said publicly.",
-          '在 #general 和 #deals 频道里往下滚 — 有人说了不该公开说的事。',
+          "People talk about things they shouldn't. Scroll — don't just skim the top messages.",
+          '有人在群里说了不该说的事。往下滚一滚 — 别只看最顶上的几条。',
         ),
       }
     }
     if (!unlocked.has('peoplehub')) {
       return {
-        title: t("Unlock PeopleHub", '解锁人事通'),
+        title: t("Read all the emails first", '先把邮件都读一遍'),
         body: t(
-          "The IT email shows the password pattern. Try HR-NovaTech-2026.",
-          'IT 部的邮件给了密码格式提示。试试 HR-XingChen-2026。',
+          "Eight emails in your inbox. One of them explains the company's password format — you'll need it to unlock locked apps.",
+          '收件箱一共 8 封邮件。其中有一封说明了公司的密码格式 — 解锁其他应用会用到。',
         ),
       }
     }
     return {
-      title: t("Read the other emails", '读读其他邮件'),
+      title: t("Look at employee profiles", '翻翻员工档案'),
       body: t(
-        "There are 8 emails in your inbox. Some mention who has access to what.",
-        '收件箱一共 8 封邮件，里面有谁能接触到哪些文件的信息。',
+        "PeopleHub has HR records for everyone. Each person has something worth noting.",
+        '人事通里有每个人的 HR 档案。每个人身上都有值得注意的东西。',
       ),
     }
   }
 
-  // Phase 2: Mid exploration
+  // Phase 2: Mid exploration — the key insight is that ONE email explains
+  // the password pattern for ALL standard-format apps. Hints point at that
+  // email rather than giving passwords away.
   if (count < 15) {
+    const hasNoUnlockedPasswordApp =
+      !unlocked.has('docvault') &&
+      !unlocked.has('peoplehub') &&
+      !unlocked.has('printtrace') &&
+      !unlocked.has('netwatch') &&
+      !unlocked.has('cctv')
+
+    if (hasNoUnlockedPasswordApp) {
+      return {
+        title: t("Find the IT email", '找 IT 部的邮件'),
+        body: t(
+          "One of your emails is from IT and explains the password format. The same pattern works for all standard apps.",
+          '你收件箱里有一封 IT 部发的邮件，说明了密码格式。所有标准应用都用同一套格式。',
+        ),
+      }
+    }
     if (!unlocked.has('docvault')) {
       return {
         title: t("Unlock DocVault", '解锁文档中心'),
         body: t(
-          "Try DOC-NovaTech-2026. The leaked document originated from there — see who downloaded it.",
-          '试试 DOC-XingChen-2026。泄露的文件就是从这里出来的 — 看看谁下载过。',
+          "Apply the IT password format here too — the prefix comes from the app's purpose.",
+          '这里也适用 IT 邮件里那套格式 — 前缀来自应用的用途。',
         ),
       }
     }
@@ -83,8 +101,8 @@ function computeHint(state, isZh) {
       return {
         title: t("Unlock NetWatch", '解锁网安监控'),
         body: t(
-          "NET-NovaTech-2026. VPN logs will show who connected from unusual places.",
-          'NET-XingChen-2026。VPN 日志会显示谁从奇怪的地方连过内网。',
+          "Same password pattern. VPN logs will show who connected from where.",
+          '密码格式一样。VPN 日志会显示谁从哪里连过内网。',
         ),
       }
     }
@@ -92,8 +110,8 @@ function computeHint(state, isZh) {
       return {
         title: t("Unlock CCTV", '解锁监控'),
         body: t(
-          "CCTV-NovaTech-2026. Someone came into the building Saturday night.",
-          'CCTV-XingChen-2026。有人周六深夜进了大楼。',
+          "Same password pattern. Camera footage logs line up with badge and VPN times.",
+          '密码格式一样。监控记录和门禁、VPN 的时间戳能对得上。',
         ),
       }
     }
@@ -101,37 +119,37 @@ function computeHint(state, isZh) {
       return {
         title: t("Check AccessLog", '查看门禁记录'),
         body: t(
-          "Badge records show who was in the building and when. Filter by employee.",
-          '门禁记录显示每个人的进出时间。按员工筛选看看。',
+          "Badge records show who was in the building and when. Look for activity outside normal hours.",
+          '门禁记录每个人的进出时间。看看下班时间之后有没有人还在。',
         ),
       }
     }
     return {
       title: t("Cross-reference the logs", '交叉对比日志'),
       body: t(
-        "Badge + VPN + CCTV timestamps should line up for the same person.",
-        '门禁 + VPN + 监控的时间戳应该指向同一个人。',
+        "Badge + VPN + CCTV should tell the same story for whoever was there.",
+        '门禁、VPN、监控三个日志如果对得上，说明的是同一个人的行动。',
       ),
     }
   }
 
-  // Phase 3: Unlocking SecureFiles
+  // Phase 3: Unlocking SecureFiles — password is NOT in the standard format
   if (count < 22) {
     if (!unlocked.has('secfiles')) {
       return {
         title: t("The Secure Vault", '加密文件保险箱'),
         body: t(
-          "SecureFiles password breaks the standard pattern. Remember what Priya called the product in Slack.",
-          '加密文件的密码不按常规格式。记得林佳慧在飞书里怎么形容公司的产品吗？',
+          "This one breaks the standard pattern. The second word in the password is a project name — someone mentioned it in Slack with concern.",
+          '这个不按常规格式走。密码中间那个词是一个项目名字 — 有人在飞书里带着担忧提过它。',
         ),
       }
     }
     if (!has('sec-lighthouse-contract')) {
       return {
-        title: t("Read the Lighthouse contract", '读灯塔计划合同'),
+        title: t("Read the files inside", '读里面的文件'),
         body: t(
-          "SecureFiles has a contract that explains what the company is actually selling.",
-          '加密文件里有一份合同，说明了公司实际上在卖什么。',
+          "SecureFiles has contracts and transcripts about what the company is actually selling.",
+          '加密文件里有一些合同和会议记录，揭示了公司到底在卖什么。',
         ),
       }
     }
@@ -141,10 +159,10 @@ function computeHint(state, isZh) {
   if (count < 30) {
     if (!has('sec-watermark-match')) {
       return {
-        title: t("The watermark identifies the mole", '水印指向内鬼'),
+        title: t("Check the comparison document", '看那份比对分析'),
         body: t(
-          "SecureFiles has a comparison of the leaked copy. Every download has a unique watermark.",
-          '加密文件里有一份泄露副本的比对分析。每个下载的文件都有独特水印。',
+          "One of the files in SecureFiles compares the leaked version to internal copies. That's how the source gets identified.",
+          '加密文件里有一份把泄露版本和内部副本对比的分析。源头就是这么被识别的。',
         ),
       }
     }
