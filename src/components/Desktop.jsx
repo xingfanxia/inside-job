@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState, useCallback } from 'react'
 import { useGame } from '../game/state.jsx'
 import DesktopIcon from './DesktopIcon.jsx'
 import Window from './Window.jsx'
@@ -7,6 +7,8 @@ import IncidentReport from './IncidentReport.jsx'
 import MobileWarning from './MobileWarning.jsx'
 import Onboarding from './Onboarding.jsx'
 import ClueToast from './ClueToast.jsx'
+import CluesNotebook from './CluesNotebook.jsx'
+import HintPanel from './HintPanel.jsx'
 import EmailApp from '../apps/EmailApp.jsx'
 import SlackApp from '../apps/SlackApp.jsx'
 import DocVaultApp from '../apps/DocVaultApp.jsx'
@@ -44,6 +46,8 @@ function getAppContent(appId) {
 export default function Desktop() {
   const { state, dispatch, localeData } = useGame()
   const config = localeData.config
+  const [notebookOpen, setNotebookOpen] = useState(false)
+  const [hintOpen, setHintOpen] = useState(false)
 
   // Get ordered list of apps for the icon grid
   const apps = useMemo(() => {
@@ -66,6 +70,11 @@ export default function Desktop() {
     document.body.setAttribute('data-locale', state.locale)
   }, [state.locale])
 
+  const openHint = useCallback(() => setHintOpen(true), [])
+  const closeHint = useCallback(() => setHintOpen(false), [])
+  const openNotebook = useCallback(() => setNotebookOpen(true), [])
+  const closeNotebook = useCallback(() => setNotebookOpen(false), [])
+
   return (
     <div className="desktop">
       <div className="desktop-main">
@@ -85,10 +94,12 @@ export default function Desktop() {
       </div>
 
       <IncidentReport />
-      <Taskbar />
+      <Taskbar onOpenHint={openHint} onOpenNotebook={openNotebook} />
       <MobileWarning />
       <Onboarding />
       <ClueToast />
+      {notebookOpen && <CluesNotebook onClose={closeNotebook} />}
+      {hintOpen && <HintPanel onClose={closeHint} />}
     </div>
   )
 }

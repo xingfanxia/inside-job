@@ -84,12 +84,33 @@ function getDefaultUnlocked(config) {
     .map((app) => app.id)
 }
 
+// --- Locale preference (independent of save file — device-level) ---
+const LOCALE_KEY = 'inside-job-locale'
+
+function readStoredLocale() {
+  if (typeof window === 'undefined') return null
+  try {
+    const v = window.localStorage.getItem(LOCALE_KEY)
+    return v === 'en' || v === 'zh' ? v : null
+  } catch {
+    return null
+  }
+}
+
+function writeStoredLocale(locale) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(LOCALE_KEY, locale)
+  } catch { /* noop */ }
+}
+
 // --- Initial state factory ---
-function createInitialState(locale = 'en') {
-  const data = getLocaleData(locale)
+function createInitialState(locale) {
+  const resolvedLocale = locale || readStoredLocale() || 'en'
+  const data = getLocaleData(resolvedLocale)
   return {
     screen: 'opening',
-    locale,
+    locale: resolvedLocale,
     openWindows: [],
     activeWindow: null,
     cluesFound: [],
@@ -319,6 +340,9 @@ function gameReducer(state, action) {
       const newLocale = action.payload
       const data = getLocaleData(newLocale)
       const defaults = getDefaultUnlocked(data.config)
+      // Persist device-level locale preference immediately — survives save
+      // clears, works across browser sessions without a game save.
+      writeStoredLocale(newLocale)
       // Preserve progress — merge the new locale's defaults with whatever
       // the player has already unlocked. Switching languages should not wipe
       // their password-gated apps or lighthouse unlock.

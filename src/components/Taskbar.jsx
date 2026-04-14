@@ -4,7 +4,7 @@ import { TOTAL_CLUES } from '../game/clues.js'
 import { getIcon } from '../styles/icons.jsx'
 import LanguageSwitcher from './LanguageSwitcher.jsx'
 
-export default function Taskbar() {
+export default function Taskbar({ onOpenHint, onOpenNotebook }) {
   const { state, dispatch, localeData } = useGame()
   const config = localeData.config
   const isZh = state.locale === 'zh'
@@ -118,6 +118,26 @@ export default function Taskbar() {
           )}
         </div>
         <span className="taskbar-company">{config.company}</span>
+
+        <button
+          type="button"
+          className="taskbar-action-btn taskbar-hint-btn"
+          onClick={onOpenHint}
+          title={isZh ? '需要提示？' : 'Need a hint?'}
+        >
+          <span className="taskbar-action-icon">💡</span>
+          <span className="taskbar-action-label">{isZh ? '提示' : 'Hint'}</span>
+        </button>
+
+        <button
+          type="button"
+          className="taskbar-action-btn taskbar-notebook-btn"
+          onClick={onOpenNotebook}
+          title={isZh ? '查看线索笔记本' : 'Clues notebook'}
+        >
+          <span className="taskbar-action-icon">📓</span>
+          <span className="taskbar-action-label">{isZh ? '笔记本' : 'Notes'}</span>
+        </button>
       </div>
 
       <div className="taskbar-center">

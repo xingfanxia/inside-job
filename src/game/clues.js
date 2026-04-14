@@ -81,8 +81,151 @@ export const MIRROR_CLUES = {
   'mirror-anomaly-unresolved': { app: 'itdesk' },
 }
 
+// Human-readable titles for each clue (displayed in the Clues Notebook).
+// Keep both locales in sync with CLUES + MIRROR_CLUES keys.
+export const CLUE_NAMES = {
+  en: {
+    // Emails
+    'email-leaked-doc':             'CEO forwarded the leaked board minutes',
+    'email-financial-distribution': 'Q4 Financial Model sent to 4 recipients',
+    'email-patent-access':          'Patent Gap Analysis — restricted distribution',
+    'email-pricing-access':         'Meridian pricing strategy email',
+    'email-elena-access-request':   'Elena requested system access review',
+    // Slack
+    'slack-public-wifi-cafe':       'Team mentions the cafe with "great wifi"',
+    'slack-pricing-discussion':     'James states exact pricing floor in #deals',
+    'slack-priya-ethics':           'Priya: "we\'re building surveillance tools"',
+    'slack-elena-netwatch':         'Elena requested NetWatch admin access',
+    'slack-elena-suspicious-dm':    'Elena DM\'d documents to an unknown contact',
+    // HR
+    'hr-your-audit-gap':            'Your last audit was 14 months ago',
+    'hr-david-financial-pressure':  'David flagged for personal legal matter',
+    'hr-priya-ethics-flag':         'Priya raised Lighthouse ethics concerns',
+    'hr-james-ec-friend':           'James\'s emergency contact works at Meridian',
+    'hr-elena-meridian-history':    'Elena worked at Meridian 2018-2024',
+    'hr-ryan-comp-grievance':       'Ryan underpaid, promotion denied',
+    // Access
+    'access-elena-latenight':       'Elena badged in Saturday 23:47',
+    'access-david-earlypattern':    'David badges in ~6 AM consistently',
+    // Print
+    'print-david-early':            'David printed financial model at 6:03 AM',
+    'print-elena-saturday':         'Elena printed audit template Saturday 23:52',
+    'print-no-physical-leak':       'No print record for leaked board minutes',
+    // Network
+    'net-david-public-wifi':        'David used cafe public wifi 3 times',
+    'net-elena-saturday-vpn':       'Elena VPN\'d from office Saturday night',
+    'net-external-patent-access':   'External IP from Meridian consultant accessed patents',
+    // CCTV
+    'cctv-elena-arrival':           'Elena entered building Saturday night',
+    'cctv-elena-server-room':       'Elena went to Floor 3 server room',
+    'cctv-elena-copying':           'Elena copying files at workstation',
+    // Documents
+    'doc-board-access-log':              '5 people accessed board minutes',
+    'doc-patent-external-ip':            'External IP accessed Patent Gap Analysis',
+    'sec-lighthouse-contract':           'Project Lighthouse surveillance contract',
+    'sec-board-surveillance-discussion': 'Board voted to hide surveillance use',
+    'sec-watermark-match':               'Leaked watermark identifies the mole',
+    'sec-whistleblower-email':           '"They chose profit. Someone needs to see this."',
+    // IT
+    'it-elena-netwatch-request':    'Elena\'s NetWatch access ticket',
+    'it-david-vpn-warning':         'IT warned David about public wifi',
+    // Calendar
+    'calendar-lighthouse-cancelled':'CEO cancelled Lighthouse ethics review',
+  },
+  zh: {
+    'email-leaked-doc':             'CEO 转发了泄露的董事会纪要',
+    'email-financial-distribution': 'Q4 财务模型分发给了 4 个人',
+    'email-patent-access':          '专利漏洞分析 — 受限分发',
+    'email-pricing-access':         '鼎盛集团定价策略邮件',
+    'email-elena-access-request':   '赵敏申请系统访问审查',
+    'slack-public-wifi-cafe':       '团队提到"楼下瑞幸 wifi 不错"',
+    'slack-pricing-discussion':     '张伟杰在 #交易组 说出底价',
+    'slack-priya-ethics':           '林佳慧："我们做的就是监控工具"',
+    'slack-elena-netwatch':         '赵敏申请网安监控管理权限',
+    'slack-elena-suspicious-dm':    '赵敏私聊发送文件给陌生联系人',
+    'hr-your-audit-gap':            '你上次审计是 14 个月前',
+    'hr-david-financial-pressure':  '李大卫被标记个人法律问题',
+    'hr-priya-ethics-flag':         '林佳慧提出灯塔计划伦理问题',
+    'hr-james-ec-friend':           '张伟杰紧急联系人在鼎盛集团',
+    'hr-elena-meridian-history':    '赵敏 2018-2024 在鼎盛集团工作',
+    'hr-ryan-comp-grievance':       '金瑞恩薪资偏低，调岗被拒',
+    'access-elena-latenight':       '赵敏周六 23:47 刷卡进入',
+    'access-david-earlypattern':    '李大卫每天 6 点左右打卡',
+    'print-david-early':            '李大卫凌晨 6:03 打印财务模型',
+    'print-elena-saturday':         '赵敏周六 23:52 打印审计模板',
+    'print-no-physical-leak':       '泄露的董事会纪要没有打印记录',
+    'net-david-public-wifi':        '李大卫 3 次使用咖啡馆公共 wifi',
+    'net-elena-saturday-vpn':       '赵敏周六晚从办公室 VPN 登录',
+    'net-external-patent-access':   '鼎盛顾问公司 IP 访问了专利分析',
+    'cctv-elena-arrival':           '赵敏周六深夜进入大楼',
+    'cctv-elena-server-room':       '赵敏去了 3 楼机房',
+    'cctv-elena-copying':           '赵敏在工位复制文件',
+    'doc-board-access-log':              '5 人访问了董事会纪要',
+    'doc-patent-external-ip':            '外部 IP 访问了专利漏洞分析',
+    'sec-lighthouse-contract':           '灯塔计划监控合同',
+    'sec-board-surveillance-discussion': '董事会投票决定隐瞒监控用途',
+    'sec-watermark-match':               '泄露文件水印指向内鬼',
+    'sec-whistleblower-email':           '"他们选择了利润。有人需要看到这个。"',
+    'it-elena-netwatch-request':    '赵敏的网安监控访问工单',
+    'it-david-vpn-warning':         'IT 警告李大卫不要用公共 wifi',
+    'calendar-lighthouse-cancelled':'CEO 取消了灯塔计划伦理评审',
+  },
+}
+
+// Mirror clue titles — the player's own failures
+export const MIRROR_CLUE_NAMES = {
+  en: {
+    'mirror-your-audit-gap':     'Last audit: 14 months ago',
+    'mirror-audit-overdue':      'Ignored HR\'s 3rd reminder',
+    'mirror-vpn-exception':      'You approved BYOD VPN exceptions',
+    'mirror-byod-approval':      '12 personal devices, all approved by you',
+    'mirror-audit-postponed':    'Rescheduled security audit 3 times',
+    'mirror-audit-postponement': 'IT ticket: audit postponed "for Q4"',
+    'mirror-anomaly-unresolved': 'Open anomaly alert — assigned to you',
+  },
+  zh: {
+    'mirror-your-audit-gap':     '上次审计：14 个月前',
+    'mirror-audit-overdue':      '忽略了 HR 的第 3 次提醒',
+    'mirror-vpn-exception':      '你批准了 BYOD VPN 例外',
+    'mirror-byod-approval':      '12 台个人设备，全都是你批的',
+    'mirror-audit-postponed':    '你把安全审计推迟了 3 次',
+    'mirror-audit-postponement': 'IT 工单：审计推迟"等 Q4 再说"',
+    'mirror-anomaly-unresolved': '未处理的异常告警 — 负责人是你',
+  },
+}
+
 export const TOTAL_CLUES = Object.keys(CLUES).length
 export const TOTAL_MIRROR_CLUES = Object.keys(MIRROR_CLUES).length
+
+// App labels grouping for the Clues Notebook display
+export const CLUE_APPS = {
+  en: {
+    email: 'Email',
+    slack: 'Slack',
+    peoplehub: 'PeopleHub',
+    accesslog: 'AccessLog',
+    printtrace: 'PrintTrace',
+    netwatch: 'NetWatch',
+    cctv: 'CCTV',
+    docvault: 'DocVault',
+    secfiles: 'SecureFiles',
+    itdesk: 'ITDesk',
+    calendar: 'Calendar',
+  },
+  zh: {
+    email: '邮箱',
+    slack: '飞书',
+    peoplehub: '人事通',
+    accesslog: '门禁记录',
+    printtrace: '打印记录',
+    netwatch: '网安监控',
+    cctv: '监控',
+    docvault: '文档中心',
+    secfiles: '加密文件',
+    itdesk: 'IT 工单',
+    calendar: '日历',
+  },
+}
 
 // --- Thresholds ---
 // Recalibrated for ~36 total clues.

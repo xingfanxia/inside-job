@@ -1,8 +1,14 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useGame } from '../game/state.jsx'
 import { useClue } from '../game/clues.js'
 
 const TABS = ['inbox', 'drafts', 'sent']
+
+// Session-level read tracking — persisted across re-opens of the window via
+// a module-level Set. We don't push this into the reducer/save-file because
+// it's purely UX sugar (not a clue). Clearing window.localStorage or Reset
+// Game naturally wipes it when the page reloads.
+const readEmailIds = new Set()
 
 function EmailClueRecorder({ clueId, clueType }) {
   const { discover } = useClue(clueId)
@@ -27,12 +33,13 @@ function EmailMirrorRecorder({ mirrorId }) {
   return null
 }
 
-function EmailListItem({ email, isSelected, onSelect, tab }) {
+function EmailListItem({ email, isSelected, onSelect, tab, readSet }) {
   const from = tab === 'sent'
     ? email.to
     : email.from
 
-  const isUnread = tab === 'inbox' && email.isRead === false
+  // Unread if: originally marked unread in data AND player hasn't selected it yet
+  const isUnread = tab === 'inbox' && email.isRead === false && !readSet.has(email.id)
   const hasMirror = !!email.mirrorId
 
   return (
@@ -53,11 +60,13 @@ function EmailListItem({ email, isSelected, onSelect, tab }) {
   )
 }
 
-function EmailDetail({ email, tab }) {
+function EmailDetail({ email, tab, onOpenAttachment, isZh }) {
   if (!email) {
     return (
       <div className="email-detail-empty">
-        <span className="email-detail-empty-text">Select an email to read</span>
+        <span className="email-detail-empty-text">
+          {isZh ? '选择一封邮件阅读' : 'Select an email to read'}
+        </span>
       </div>
     )
   }
@@ -88,13 +97,21 @@ function EmailDetail({ email, tab }) {
       <div className="email-detail-body">{email.body}</div>
       {email.attachments && email.attachments.length > 0 && (
         <div className="email-detail-attachments">
-          <div className="email-attachments-label">Attachments:</div>
+          <div className="email-attachments-label">
+            {isZh ? '附件：' : 'Attachments:'}
+          </div>
           {email.attachments.map((att) => (
-            <div key={att.name} className="email-attachment">
+            <button
+              key={att.name}
+              type="button"
+              className="email-attachment"
+              onClick={() => onOpenAttachment(att)}
+              title={isZh ? '点击预览' : 'Click to preview'}
+            >
               <span className="email-attachment-icon">&#128206;</span>
               <span className="email-attachment-name">{att.name}</span>
               <span className="email-attachment-size">({att.size})</span>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -109,12 +126,78 @@ function EmailDetail({ email, tab }) {
   )
 }
 
+function AttachmentPreview({ attachment, isZh, onClose }) {
+  if (!attachment) return null
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  // Figure out file type from extension for the preview placeholder
+  const ext = attachment.name.split('.').pop()?.toLowerCase() || 'file'
+  const typeLabel = {
+    pdf: 'PDF', xlsx: 'Excel', xls: 'Excel', docx: 'Word', doc: 'Word',
+    pptx: 'PowerPoint', ppt: 'PowerPoint', txt: 'Text', csv: 'CSV',
+  }[ext] || ext.toUpperCase()
+
+  return (
+    <div className="email-attachment-overlay" onClick={onClose}>
+      <div className="email-attachment-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="email-attachment-modal-header">
+          <div className="email-attachment-modal-icon">&#128206;</div>
+          <div className="email-attachment-modal-info">
+            <div className="email-attachment-modal-name">{attachment.name}</div>
+            <div className="email-attachment-modal-meta">
+              {typeLabel} · {attachment.size}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="email-attachment-modal-close"
+            onClick={onClose}
+            aria-label={isZh ? '关闭' : 'Close'}
+          >×</button>
+        </div>
+        <div className="email-attachment-modal-body">
+          <div className="email-attachment-preview">
+            <div className="email-attachment-preview-watermark">CONFIDENTIAL</div>
+            <div className="email-attachment-preview-header">
+              <div className="email-attachment-preview-line" style={{ width: '70%' }} />
+              <div className="email-attachment-preview-line" style={{ width: '40%' }} />
+            </div>
+            <div className="email-attachment-preview-body">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="email-attachment-preview-line"
+                  style={{ width: `${60 + (i * 7) % 35}%` }}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="email-attachment-hint">
+            {isZh
+              ? '📁 预览仅显示文件存在。完整内容请在 DocVault（文档中心）中查阅。'
+              : '📁 Preview shows the file exists. For full content, check DocVault.'}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function EmailApp() {
-  const { localeData } = useGame()
+  const { state, localeData } = useGame()
   const emails = localeData.emails
+  const isZh = state.locale === 'zh'
 
   const [activeTab, setActiveTab] = useState('inbox')
   const [selectedId, setSelectedId] = useState(null)
+  const [attachmentPreview, setAttachmentPreview] = useState(null)
+  // Force re-render when readEmailIds changes (it's a module-level Set)
+  const [, bumpRead] = useState(0)
 
   const currentList = useMemo(() => emails[activeTab] || [], [emails, activeTab])
 
@@ -127,18 +210,30 @@ export default function EmailApp() {
   useEffect(() => {
     if (emails.inbox.length > 0 && selectedId === null) {
       setSelectedId(emails.inbox[0].id)
+      // Auto-selected email should also be marked read
+      readEmailIds.add(emails.inbox[0].id)
+      bumpRead((n) => n + 1)
     }
   }, [emails.inbox, selectedId])
 
   // Reset selection when switching tabs
-  const handleTabChange = (tab) => {
+  const handleTabChange = useCallback((tab) => {
     setActiveTab(tab)
     setSelectedId(null)
-  }
+  }, [])
 
-  const handleSelectEmail = (email) => {
+  const handleSelectEmail = useCallback((email) => {
     setSelectedId(email.id)
-  }
+    if (!readEmailIds.has(email.id)) {
+      readEmailIds.add(email.id)
+      bumpRead((n) => n + 1)
+    }
+  }, [])
+
+  const unreadCount = useMemo(
+    () => emails.inbox.filter((e) => e.isRead === false && !readEmailIds.has(e.id)).length,
+    [emails.inbox] // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   return (
     <div className="email-app">
@@ -146,14 +241,13 @@ export default function EmailApp() {
         {TABS.map((tab) => (
           <button
             key={tab}
+            type="button"
             className={`email-tab ${activeTab === tab ? 'email-tab-active' : ''}`}
             onClick={() => handleTabChange(tab)}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            {tab === 'inbox' && emails.inbox.filter((e) => !e.isRead).length > 0 && (
-              <span className="email-tab-badge">
-                {emails.inbox.filter((e) => !e.isRead).length}
-              </span>
+            {tab === 'inbox' && unreadCount > 0 && (
+              <span className="email-tab-badge">{unreadCount}</span>
             )}
           </button>
         ))}
@@ -167,16 +261,32 @@ export default function EmailApp() {
               tab={activeTab}
               isSelected={selectedId === email.id}
               onSelect={() => handleSelectEmail(email)}
+              readSet={readEmailIds}
             />
           ))}
           {currentList.length === 0 && (
-            <div className="email-list-empty">No emails</div>
+            <div className="email-list-empty">
+              {isZh ? '暂无邮件' : 'No emails'}
+            </div>
           )}
         </div>
         <div className="email-detail-pane">
-          <EmailDetail email={selectedEmail} tab={activeTab} />
+          <EmailDetail
+            email={selectedEmail}
+            tab={activeTab}
+            isZh={isZh}
+            onOpenAttachment={setAttachmentPreview}
+          />
         </div>
       </div>
+
+      {attachmentPreview && (
+        <AttachmentPreview
+          attachment={attachmentPreview}
+          isZh={isZh}
+          onClose={() => setAttachmentPreview(null)}
+        />
+      )}
     </div>
   )
 }
